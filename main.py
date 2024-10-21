@@ -20,24 +20,24 @@ def main() -> None:
     print("Creating new Django project")
 
     project_dir = os.path.join(BASE_DIR, "django")
-    print(f"Project directory -> {project_dir}")
+    print(f"[INFO] Project directory -> {project_dir}")
     if os.path.exists(project_dir):
         print("[INFO] Found Django project in directory, deleting...")
         shutil.rmtree(project_dir)
 
     venv_dir = os.path.join(project_dir, "venv")
 
-    print("[INFO] Creating Virtual Environment")
+    print("[INFO] Creating virtual environment")
     if os.system(f"python3 -m venv '{venv_dir}'") != 0:
-        print("[ERROR] Virtual Environment cannot be created")
+        print("[ERROR] Virtual environment cannot be created")
         sys.exit(1)
-    print("[RESULT] Virtual Environment Created")
+    print("[RESULT] Virtual environment created")
 
-    print("[INFO] Activating Virtual Environment")
+    print("[INFO] Activating virtual environment")
     if os.system(f"source '{venv_dir}/bin/activate'") != 0:
-        print("[ERROR] Virtual Environment cannot be activated")
+        print("[ERROR] Virtual environment cannot be activated")
         sys.exit(1)
-    print("[RESULT] Virtual Environment Activated")
+    print("[RESULT] Virtual environment activated")
 
     pip = f"{venv_dir}/bin/pip"
     python = f"{venv_dir}/bin/python"
@@ -84,7 +84,7 @@ def main() -> None:
     if include_postgres_sql:
         libs.append("psycopg2")
 
-    include_custom_user = click.confirm("Include Custom Auth?", default=True)
+    include_custom_user = click.confirm("Include Custom User Model?", default=True)
 
     # for lib in libs:
     #     # run([pip, "install", lib], cwd=project_dir, check=False)

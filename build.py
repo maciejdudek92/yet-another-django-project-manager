@@ -27,7 +27,7 @@ def build() -> None:
     prepare_assets()
     script_path = os.path.join(Path(__file__).resolve().parent, "main.py")
     build_path = os.path.join(Path(__file__).resolve().parent, "release")
-    pyi_args = [script_path, "--name=django_project_cli", "--onefile", "--noconfirm", "--console", f"--distpath={build_path}", "--add-data=assets.zip:."]
+    pyi_args = [script_path, "--name=create-django-project", "--onefile", "--noconfirm", "--console", f"--distpath={build_path}", "--add-data=assets.zip:."]
 
     PyInstaller.__main__.run(
         pyi_args,
