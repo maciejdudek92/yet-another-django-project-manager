@@ -8,14 +8,20 @@ from pathlib import Path
 import click
 from dotenv import set_key
 
-BASE_DIR = Path(sys.argv[0]).resolve().parent
-TEMP_DIR = sys._MEIPASS
-ASSETS = os.path.join(TEMP_DIR, "assets.zip")
 
+def help():
+    arg = " ".join(sys.argv[1:])
+    print(f"""unknown option: {arg}
+USAGE: 
+-c, --create    |    Create new Django project 
+-d, --docker    |    Build docker container from existing Django project""")
+    sys.exit(0)
 
-def main() -> None:
-    print("Creating new Django project")
-
+def create_project() -> None:
+    print("[INFO] Creating new Django project")
+    BASE_DIR = Path(sys.argv[0]).resolve().parent
+    TEMP_DIR = sys._MEIPASS
+    ASSETS = os.path.join(TEMP_DIR, "assets.zip")
     project_dir = os.path.join(BASE_DIR, "django")
     print(f"[INFO] Project directory -> {project_dir}")
     if os.path.exists(project_dir):
@@ -199,6 +205,24 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")\n"""
         settings.truncate()
     print("[RESULT] Succes!")
     sys.exit(0)
+
+def build_docker() -> None:
+    print("Not available at this moment -> https://testdriven.io/blog/django-docker-traefik/")
+    sys.exit(0)
+    
+def main() -> None:
+    CREATE = "create"
+    BUILD_DOCKER = "build-docker"
+    
+    if sys.argv[1] in [CREATE,BUILD_DOCKER]:
+        if sys.argv[1] == CREATE:
+            create_project()
+        elif sys.argv[1] == BUILD_DOCKER:
+            build_docker()
+    else:
+        help()
+    
+
 
 
 if __name__ == "__main__":
