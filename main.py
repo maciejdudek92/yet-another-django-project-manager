@@ -1,5 +1,3 @@
-# {{site_name}}
-# {{server_admin}}
 import os
 import shutil
 import sys
@@ -12,7 +10,6 @@ from dotenv import set_key
 
 BASE_DIR = Path(sys.argv[0]).resolve().parent
 TEMP_DIR = sys._MEIPASS
-# TEMP_DIR = os.path.join(BASE_DIR, "temp")
 ASSETS = os.path.join(TEMP_DIR, "assets.zip")
 
 
@@ -86,8 +83,6 @@ def main() -> None:
 
     include_custom_user = click.confirm("Include Custom User Model?", default=True)
 
-    # for lib in libs:
-    #     # run([pip, "install", lib], cwd=project_dir, check=False)
     libs_string = " ".join(libs)
     if os.system(f"'{pip}' install {libs_string}") != 0:
         print("[ERROR] Libraries cannot be installed")

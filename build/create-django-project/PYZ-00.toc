@@ -1,5 +1,5 @@
 ('/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
- 'Projects/django-docker-builder/create-django-project/build/create-django-project/PYZ-00.pyz',
+ 'Projects/create-django-project/build/create-django-project/PYZ-00.pyz',
  [('__future__',
    '/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/__future__.py',
    'PYMODULE'),
@@ -41,63 +41,63 @@
    'PYMODULE'),
   ('click',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/__init__.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/__init__.py',
    'PYMODULE'),
   ('click._compat',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/_compat.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/_compat.py',
    'PYMODULE'),
   ('click._termui_impl',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/_termui_impl.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/_termui_impl.py',
    'PYMODULE'),
   ('click._textwrap',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/_textwrap.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/_textwrap.py',
    'PYMODULE'),
   ('click._winconsole',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/_winconsole.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/_winconsole.py',
    'PYMODULE'),
   ('click.core',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/core.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/core.py',
    'PYMODULE'),
   ('click.decorators',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/decorators.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/decorators.py',
    'PYMODULE'),
   ('click.exceptions',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/exceptions.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/exceptions.py',
    'PYMODULE'),
   ('click.formatting',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/formatting.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/formatting.py',
    'PYMODULE'),
   ('click.globals',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/globals.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/globals.py',
    'PYMODULE'),
   ('click.parser',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/parser.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/parser.py',
    'PYMODULE'),
   ('click.shell_completion',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/shell_completion.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/shell_completion.py',
    'PYMODULE'),
   ('click.termui',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/termui.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/termui.py',
    'PYMODULE'),
   ('click.types',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/types.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/types.py',
    'PYMODULE'),
   ('click.utils',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/click/utils.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/click/utils.py',
    'PYMODULE'),
   ('configparser',
    '/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/configparser.py',
@@ -137,23 +137,23 @@
    'PYMODULE'),
   ('dotenv',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/dotenv/__init__.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/dotenv/__init__.py',
    'PYMODULE'),
   ('dotenv.ipython',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/dotenv/ipython.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/dotenv/ipython.py',
    'PYMODULE'),
   ('dotenv.main',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/dotenv/main.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/dotenv/main.py',
    'PYMODULE'),
   ('dotenv.parser',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/dotenv/parser.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/dotenv/parser.py',
    'PYMODULE'),
   ('dotenv.variables',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/dotenv/variables.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/dotenv/variables.py',
    'PYMODULE'),
   ('email',
    '/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/email/__init__.py',
@@ -274,47 +274,47 @@
    'PYMODULE'),
   ('importlib_metadata',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/__init__.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/__init__.py',
    'PYMODULE'),
   ('importlib_metadata._adapters',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_adapters.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_adapters.py',
    'PYMODULE'),
   ('importlib_metadata._collections',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_collections.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_collections.py',
    'PYMODULE'),
   ('importlib_metadata._compat',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_compat.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_compat.py',
    'PYMODULE'),
   ('importlib_metadata._functools',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_functools.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_functools.py',
    'PYMODULE'),
   ('importlib_metadata._itertools',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_itertools.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_itertools.py',
    'PYMODULE'),
   ('importlib_metadata._meta',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_meta.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_meta.py',
    'PYMODULE'),
   ('importlib_metadata._text',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_text.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/_text.py',
    'PYMODULE'),
   ('importlib_metadata.compat',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/compat/__init__.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/compat/__init__.py',
    'PYMODULE'),
   ('importlib_metadata.compat.py311',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/compat/py311.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/compat/py311.py',
    'PYMODULE'),
   ('importlib_metadata.compat.py39',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/compat/py39.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/importlib_metadata/compat/py39.py',
    'PYMODULE'),
   ('inspect',
    '/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/inspect.py',
@@ -492,21 +492,21 @@
    'PYMODULE'),
   ('zipp',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/zipp/__init__.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/zipp/__init__.py',
    'PYMODULE'),
   ('zipp.compat',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/zipp/compat/__init__.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/zipp/compat/__init__.py',
    'PYMODULE'),
   ('zipp.compat.overlay',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/zipp/compat/overlay.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/zipp/compat/overlay.py',
    'PYMODULE'),
   ('zipp.compat.py310',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/zipp/compat/py310.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/zipp/compat/py310.py',
    'PYMODULE'),
   ('zipp.glob',
    '/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev '
-   'Projects/django-docker-builder/create-django-project/venv/lib/python3.9/site-packages/zipp/glob.py',
+   'Projects/create-django-project/venv/lib/python3.9/site-packages/zipp/glob.py',
    'PYMODULE')])

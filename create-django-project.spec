@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev Projects/django-docker-builder/create-django-project/main.py'],
+    ['/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev Projects/create-django-project/main.py'],
     pathex=[],
     binaries=[],
     datas=[('assets.zip', '.')],
