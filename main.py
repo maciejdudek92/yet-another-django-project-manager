@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import sys
 import uuid
@@ -12,6 +13,7 @@ from dotenv import set_key
 def __help():
     arg = " ".join(sys.argv[1:])
     print(f"""unknown option: {arg}
+
 USAGE:
 -c, --create    |    Create new Django project
 -d, --docker    |    Build docker container from existing Django project""")
@@ -47,30 +49,38 @@ def __create_project() -> None:
     python = f"{venv_dir}/bin/python"
 
     to_install = ["django", "python-decouple"]
-    org_installed_apps = """INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-]
-"""
-    org_databases = """DATABASES = {
-    'default': {
+
+    installed_apps = [
+        "django.contrib.admin",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.sessions",
+        "django.contrib.messages",
+        "django.contrib.staticfiles",
+    ]
+    middleware = [
+        "corsheaders.middleware.CorsMiddleware",
+        "django.middleware.security.SecurityMiddleware",
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "django.middleware.common.CommonMiddleware",
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    ]
+    sqlite_db = """    'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}"""
-    org_middleware = """MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]"""
+    }"""
+    postgresql_db = """    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': '<db_name>',
+        'USER': '<db_username>',
+        'PASSWORD': '<password>',
+        'HOST': '<db_hostname_or_ip>',
+        'PORT': '<db_port>',
+    }"""
+
     org_urls = """urlpatterns = [
     path('admin/', admin.site.urls),
 ]"""
@@ -89,6 +99,7 @@ def __create_project() -> None:
     include_postgres_sql = click.confirm("Include PostgreSQL?", default=False)
     if include_postgres_sql:
         to_install.append("psycopg2")
+
     include_next_js = click.confirm("Include Next.js? https://pypi.org/project/django-nextjs/", default=True)
     if include_next_js:
         to_install.append("django-nextjs")
@@ -147,60 +158,32 @@ def __create_project() -> None:
 
     with open(settings_path, "r+") as settings:
         content = settings.read()
-        new_installed_apps = """INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',"""
-
         if include_rest:
-            new_installed_apps += "\n    'rest_framework',"
-            new_installed_apps += "\n    'rest_framework.authtoken',"
+            installed_apps.append("rest_framework")
+            installed_apps.append("rest_framework.authtoken")
 
         if include_cors:
-            new_installed_apps += "\n    'corsheaders',"
-            new_middleware = """MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-]
+            installed_apps.append("rest_framework")
 
-CORS_ALLOW_ALL_ORIGINS = True"""
-            content = content.replace(org_middleware, new_middleware)
+            middleware_str = "\n".join(f'    "{m}",' for m in middleware)
+            content = re.sub(r"(MIDDLEWARE = \[)([\s\S]*?)(\])", rf"\1\n{middleware_str}\n\3", content)
+            content += "\nCORS_ALLOW_ALL_ORIGINS = True\n"  # adding at end
 
         if include_next_js:
-            new_installed_apps += "\n    'django_nextjs.apps.DjangoNextJSConfig',"
+            installed_apps.append("django_nextjs.apps.DjangoNextJSConfig")
 
         if include_custom_user:
-            new_installed_apps += "\n    'users',"
+            installed_apps.append("users")
+            content += '\nAUTH_USER_MODEL = "users.User"\n'
 
-        new_installed_apps += "\n]\n"
-
-        if include_custom_user:
-            new_installed_apps += '\nAUTH_USER_MODEL = "users.User"\n'
+        installed_apps_str = "\n".join(f'    "{m}",' for m in installed_apps)
+        content = re.sub(r"(INSTALLED_APPS = \[)([\s\S]*?)(\])", rf"\1\n{installed_apps_str}\n\3", content)
 
         if include_postgres_sql:
-            new_databases = """DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': ‘<db_name>’,
-        'USER': '<db_username>',
-        'PASSWORD': '<password>',
-        'HOST': '<db_hostname_or_ip>',
-        'PORT': '<db_port>',
-    }
-} """
-            content = content.replace(org_databases, new_databases)
+            content = re.sub(r"(DATABASES = \{)([\s\S]*?)(\})([\s\S]*?)(\})", rf"\1\n{postgresql_db}\n\3", content)
 
+        content = re.sub(r"(INSTALLED_APPS = \[)([\s\S]*?)(\])", rf"\1\n{installed_apps_str}\3", content)
         org_static = "STATIC_URL = 'static/'"
-
         new_static = """STATIC_URL = "static/"
 MEDIA_URL = "media/"
 # STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
@@ -212,23 +195,22 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")\n"""
         content = content.replace("ALLOWED_HOSTS = []", "ALLOWED_HOSTS = ['*']")
 
         settings.seek(0)
-        settings.write(content.replace(org_installed_apps, new_installed_apps))
+        settings.write(content)
         settings.truncate()
 
-    if include_next_js:
-        with open(urls_path, "r+") as urls:
-            content = urls.replace(
-                org_urls,
-                """urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('django_nextjs.urls'))
-]""",
-            )
-            content = content.replace("from django.urls import path", "from django.urls import path, include")
-            urls.seek(0)
-            urls.write(content)
-            urls.truncate()
-
+    #     if include_next_js:
+    #         with open(urls_path, "r+") as urls:
+    #             content = urls.replace(
+    #                 org_urls,
+    #                 """urlpatterns = [
+    #     path('admin/', admin.site.urls),
+    #     path('', include('django_nextjs.urls'))
+    # ]""",
+    #             )
+    #             content = content.replace("from django.urls import path", "from django.urls import path, include")
+    #             urls.seek(0)
+    #             urls.write(content)
+    #             urls.truncate()
     print("[RESULT] Succes!")
     sys.exit(0)
 
@@ -239,14 +221,17 @@ def __build_docker() -> None:
 
 
 def main() -> None:
-    CREATE = "create"
-    BUILD_DOCKER = "build-docker"
+    CREATE = ["-c", "--create"]
+    BUILD_DOCKER = ["-d", "--docker "]
 
-    if sys.argv[1] in [CREATE, BUILD_DOCKER]:
-        if sys.argv[1] == CREATE:
-            __create_project()
-        elif sys.argv[1] == BUILD_DOCKER:
-            __build_docker()
+    if len(sys.argv) > 1:
+        if sys.argv[1] in CREATE + BUILD_DOCKER:
+            if sys.argv[1] in CREATE:
+                __create_project()
+            elif sys.argv[1] in BUILD_DOCKER:
+                __build_docker()
+        else:
+            __help()
     else:
         __help()
 

@@ -1,4 +1,4 @@
 python-on-whales
 pyinstaller
 click
-dotenv
+python-dotenv
