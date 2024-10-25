@@ -198,19 +198,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")\n"""
         settings.write(content)
         settings.truncate()
 
-    #     if include_next_js:
-    #         with open(urls_path, "r+") as urls:
-    #             content = urls.replace(
-    #                 org_urls,
-    #                 """urlpatterns = [
-    #     path('admin/', admin.site.urls),
-    #     path('', include('django_nextjs.urls'))
-    # ]""",
-    #             )
-    #             content = content.replace("from django.urls import path", "from django.urls import path, include")
-    #             urls.seek(0)
-    #             urls.write(content)
-    #             urls.truncate()
+        if include_next_js:
+            with open(urls_path, "r+") as urls:
+                content = urls.replace(
+                    org_urls,
+                    """urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('', include('django_nextjs.urls'))
+    ]""",
+                )
+                content = content.replace("from django.urls import path", "from django.urls import path, include")
+                urls.seek(0)
+                urls.write(content)
+                urls.truncate()
     print("[RESULT] Succes!")
     sys.exit(0)
 
