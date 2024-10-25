@@ -9,15 +9,16 @@ import click
 from dotenv import set_key
 
 
-def help():
+def __help():
     arg = " ".join(sys.argv[1:])
     print(f"""unknown option: {arg}
-USAGE: 
--c, --create    |    Create new Django project 
+USAGE:
+-c, --create    |    Create new Django project
 -d, --docker    |    Build docker container from existing Django project""")
     sys.exit(0)
 
-def create_project() -> None:
+
+def __create_project() -> None:
     print("[INFO] Creating new Django project")
     BASE_DIR = Path(sys.argv[0]).resolve().parent
     TEMP_DIR = sys._MEIPASS
@@ -45,7 +46,7 @@ def create_project() -> None:
     pip = f"{venv_dir}/bin/pip"
     python = f"{venv_dir}/bin/python"
 
-    libs = ["django", "python-decouple"]
+    to_install = ["django", "python-decouple"]
     org_installed_apps = """INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -70,27 +71,32 @@ def create_project() -> None:
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]"""
-
-    include_ninja_api = click.confirm("Include NinjaApi?", default=True)
-    if include_ninja_api:
-        libs.append("django-ninja")
+    org_urls = """urlpatterns = [
+    path('admin/', admin.site.urls),
+]"""
+    include_ninja = click.confirm("Include DjangoNinja? https://django-ninja.dev", default=True)
+    if include_ninja:
+        to_install.append("django-ninja")
 
     include_rest = click.confirm("Include Rest Framework?", default=True)
     if include_rest:
-        libs.append("djangorestframework")
+        to_install.append("djangorestframework")
 
     include_cors = click.confirm("Include Cors Headers?", default=True)
     if include_cors:
-        libs.append("django-cors-headers")
+        to_install.append("django-cors-headers")
 
     include_postgres_sql = click.confirm("Include PostgreSQL?", default=False)
     if include_postgres_sql:
-        libs.append("psycopg2")
+        to_install.append("psycopg2")
+    include_next_js = click.confirm("Include Next.js? https://pypi.org/project/django-nextjs/", default=True)
+    if include_next_js:
+        to_install.append("django-nextjs")
 
     include_custom_user = click.confirm("Include Custom User Model?", default=True)
 
-    libs_string = " ".join(libs)
-    if os.system(f"'{pip}' install {libs_string}") != 0:
+    install_string = " ".join(to_install)
+    if os.system(f"'{pip}' install {install_string}") != 0:
         print("[ERROR] Libraries cannot be installed")
         sys.exit(1)
     print("[RESULT] Libraries successfully installed")
@@ -121,7 +127,7 @@ def create_project() -> None:
         shutil.copytree(users_module_path, os.path.join(project_dir, "users"))
 
     settings_path = os.path.join(project_dir, "config", "settings.py")
-
+    urls_path = os.path.join(project_dir, "config", "urls.py")
     new_settings_lines = []
 
     with open(settings_path) as settings:
@@ -147,8 +153,7 @@ def create_project() -> None:
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'users',"""
+    'django.contrib.staticfiles',"""
 
         if include_rest:
             new_installed_apps += "\n    'rest_framework',"
@@ -156,7 +161,6 @@ def create_project() -> None:
 
         if include_cors:
             new_installed_apps += "\n    'corsheaders',"
-
             new_middleware = """MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -169,9 +173,16 @@ def create_project() -> None:
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True"""
-        content = content.replace(org_middleware, new_middleware)
+            content = content.replace(org_middleware, new_middleware)
+
+        if include_next_js:
+            new_installed_apps += "\n    'django_nextjs.apps.DjangoNextJSConfig',"
+
+        if include_custom_user:
+            new_installed_apps += "\n    'users',"
 
         new_installed_apps += "\n]\n"
+
         if include_custom_user:
             new_installed_apps += '\nAUTH_USER_MODEL = "users.User"\n'
 
@@ -203,26 +214,41 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")\n"""
         settings.seek(0)
         settings.write(content.replace(org_installed_apps, new_installed_apps))
         settings.truncate()
+
+    if include_next_js:
+        with open(urls_path, "r+") as urls:
+            content = urls.replace(
+                org_urls,
+                """urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('django_nextjs.urls'))
+]""",
+            )
+            content = content.replace("from django.urls import path", "from django.urls import path, include")
+            urls.seek(0)
+            urls.write(content)
+            urls.truncate()
+
     print("[RESULT] Succes!")
     sys.exit(0)
 
-def build_docker() -> None:
+
+def __build_docker() -> None:
     print("Not available at this moment -> https://testdriven.io/blog/django-docker-traefik/")
     sys.exit(0)
-    
+
+
 def main() -> None:
     CREATE = "create"
     BUILD_DOCKER = "build-docker"
-    
-    if sys.argv[1] in [CREATE,BUILD_DOCKER]:
-        if sys.argv[1] == CREATE:
-            create_project()
-        elif sys.argv[1] == BUILD_DOCKER:
-            build_docker()
-    else:
-        help()
-    
 
+    if sys.argv[1] in [CREATE, BUILD_DOCKER]:
+        if sys.argv[1] == CREATE:
+            __create_project()
+        elif sys.argv[1] == BUILD_DOCKER:
+            __build_docker()
+    else:
+        __help()
 
 
 if __name__ == "__main__":
