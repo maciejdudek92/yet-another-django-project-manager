@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev Projects/create-django-project/main.py'],
+    ['/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev Projects/yet-another-django-project-manager/main.py'],
     pathex=[],
     binaries=[],
     datas=[('assets.zip', '.')],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='create-django-project',
+    name='yadpm',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
