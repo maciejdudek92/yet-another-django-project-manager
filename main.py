@@ -8,26 +8,32 @@ from pathlib import Path
 
 import click
 from dotenv import set_key
-
-
-def __help():
-    arg = " ".join(sys.argv[1:])
-    click.echo(f"""unknown option: {arg}
-
-USAGE:
--c, --create    |    Create new Django project
--d, --docker    |    Build docker container from existing Django project""")
-    sys.exit(0)
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
 
 
 class DjangoProjectManager:
+    # console: Console
     BASE_DIR: str
+    PROJECT_NAME: str
+    PROJECT_DIR: str
     TEMP_DIR: str
-    ASSETS: str
-    DJANGO_PROJECT_DIR: str
+    ASSETS_ZIP: str
+    ASSETS_DIR: str
+    DJANGO_DIR: str
     VENV_DIR: str
     SETTINGS_PATH: str
     URLS_PATH: str
+    NEXTJS_DIR: str
+    # django libs
+    include_ninja: bool
+    include_rest_auth: bool
+    include_postgres_sql: bool
+    # nextjs
+    create_next_js: bool
+    nextjs_project_name: str | None
+    # deploy
+    deploy_option: str
 
     to_install = ["django", "python-decouple"]
     installed_apps = [
@@ -61,23 +67,34 @@ class DjangoProjectManager:
     ]
 
     def __init__(self):
+        # self.console = Console()
         self.BASE_DIR = Path(sys.argv[0]).resolve().parent
-        self.TEMP_DIR = sys._MEIPASS  # noqa: SLF001
+        self.TEMP_DIR = self.BASE_DIR
+        if hasattr(sys, "_MEIPASS"):
+            self.TEMP_DIR = sys._MEIPASS  # noqa: SLF001
+        self.ASSETS_ZIP = os.path.join(self.TEMP_DIR, "assets.zip")
+        self.__prepare_assets()
 
-    def set_project_name(self, project_name: str):
-        self.PROJECT_NAME = project_name
-        self.ASSETS = os.path.join(self.TEMP_DIR, "assets.zip")
-        self.DJANGO_PROJECT_DIR = os.path.join(self.BASE_DIR, self.PROJECT_NAME)
-        self.VENV_DIR = os.path.join(self.DJANGO_PROJECT_DIR, "venv")
-        self.SETTINGS_PATH = os.path.join(self.DJANGO_PROJECT_DIR, "config", "settings.py")
-        self.URLS_PATH = os.path.join(self.DJANGO_PROJECT_DIR, "config", "urls.py")
+    def set_project_name(self):
+        self.PROJECT_NAME = click.prompt(click.style("Enter project name", fg="cyan"), default=".")
+        if self.PROJECT_NAME == ".":
+            self.PROJECT_DIR = self.BASE_DIR
+        else:
+            self.PROJECT_DIR = os.path.join(self.BASE_DIR, self.PROJECT_NAME)
+
         self.__check_project_dir()
+        os.mkdir(self.PROJECT_DIR)
+
+        self.DJANGO_DIR = os.path.join(self.PROJECT_DIR, "django")
+        self.VENV_DIR = os.path.join(self.DJANGO_DIR, "venv")
+        self.SETTINGS_PATH = os.path.join(self.DJANGO_DIR, "config", "settings.py")
+        self.URLS_PATH = os.path.join(self.DJANGO_DIR, "config", "urls.py")
 
     def __check_project_dir(self):
-        if os.path.exists(self.DJANGO_PROJECT_DIR):
+        if os.path.exists(self.PROJECT_DIR):
             click.echo(click.style(">> [WARNING] Found Django project in directory, deleting...", fg="yellow"), color=True)
-            shutil.rmtree(self.DJANGO_PROJECT_DIR)
-        click.echo(f">> [INFO] Project directory -> {self.DJANGO_PROJECT_DIR}")
+            shutil.rmtree(self.PROJECT_DIR)
+        click.echo(f">> [INFO] Project directory -> {self.PROJECT_DIR}")
 
     def __pip_install(self, libs: str):
         pip = f"{self.VENV_DIR}/bin/pip"
@@ -85,9 +102,9 @@ class DjangoProjectManager:
 
     def __django_admin(self, args: str) -> int:
         django_admin = f"'{self.VENV_DIR}/bin/django-admin'"
-        click.echo(self.DJANGO_PROJECT_DIR)
+        click.echo(self.DJANGO_DIR)
         click.echo(django_admin)
-        return os.system(f"cd '{self.DJANGO_PROJECT_DIR}' && {django_admin} {args}")
+        return os.system(f"cd '{self.DJANGO_DIR}' && {django_admin} {args}")
 
     def __install_libraries(self):
         install_string = " ".join(self.to_install)
@@ -107,6 +124,13 @@ class DjangoProjectManager:
 
         click.echo(click.style(">> [RESULT] Django project successfully created", fg="green"), color=True)
 
+    def __start_django_app(self, name: str):
+        click.echo(f">> [INFO] Creating new Django app -> {name}")
+        if self.__django_admin(args=f"startapp {name}") != 0:
+            click.echo(click.style(">> [ERROR] Django app cannot be created", fg="red"), color=True, err=True)
+            sys.exit(1)
+        click.echo(click.style(">> [RESULT] Django app successfully created", fg="green"), color=True)
+
     def create_venv(self):
         click.echo(">> [INFO] Creating virtual environment")
         if os.system(f"python3 -m venv '{self.VENV_DIR}'") != 0:
@@ -114,26 +138,56 @@ class DjangoProjectManager:
             sys.exit(1)
         click.echo(click.style(">> [RESULT] Virtual environment created", fg="green"), color=True)
 
+    def __prepare_assets(self):
+        self.ASSETS_DIR = os.path.join(self.TEMP_DIR, "temp_assets")
+        if os.path.exists(self.ASSETS_DIR):
+            shutil.rmtree(self.ASSETS_DIR)
+
+        with zipfile.ZipFile(self.ASSETS_ZIP, "r") as _zip:
+            _zip.extractall(self.ASSETS_DIR)
+
     def __add_custom_user(self):
-        users_module_path = os.path.join(self.TEMP_DIR, ".django_users")
-        if os.path.exists(os.path.join(users_module_path)):
-            shutil.rmtree(os.path.join(users_module_path))
-        with zipfile.ZipFile(self.ASSETS, "r") as _zip:
-            _zip.extractall(users_module_path)
-        shutil.copytree(users_module_path, os.path.join(self.DJANGO_PROJECT_DIR, "users"))
+        users_module_path = os.path.join(self.ASSETS_DIR, ".django_users")
+        print(users_module_path)
+        print(os.path.join(self.DJANGO_DIR, "users"))
+        shutil.copytree(users_module_path, os.path.join(self.DJANGO_DIR, "users"))
+
+    def add_run_dev(self):
+        run_dev_path = os.path.join(self.ASSETS_DIR, "run_dev.sh")
+        dest_run_dev_path = os.path.join(self.BASE_DIR, "run_dev.sh")
+        with open(run_dev_path, "r+") as file:
+            content = file.read()
+            content = content.replace(
+                "{{django_path}}",
+                f"'{self.DJANGO_DIR}'",
+            )
+            content = content.replace(
+                "{{next_js_path}}",
+                f"'{self.NEXTJS_DIR}'",
+            )
+            file.seek(0)
+            file.write(content)
+            file.truncate()
+        dev_exe_path = os.path.join(self.ASSETS_DIR, "dev")
+        dest_dev_exe_path = os.path.join(self.BASE_DIR, "dev")
+        shutil.copyfile(run_dev_path, dest_run_dev_path)
+        shutil.copyfile(dev_exe_path, dest_dev_exe_path)
+        os.system(f"chmod +x '{dest_run_dev_path}'")
+        os.system(f"chmod +x '{dest_dev_exe_path}'")
 
     def __update_url_file(self):
-        if self.include_next_js:
-            self.urlpatterns.append("path('', include('django_nextjs.urls'))")
-            self.urlpatterns.append("re_path(r'^.*', nextjs_page(), name='frontpage')")
-            with open(self.URLS_PATH, "r+") as urls:
-                content = urls.read()
-                urlpatterns_str = "\n".join(f"    {u}," for u in self.urlpatterns)
-                content = re.sub(r"(urlpatterns = \[)([\s\S]*?)(\])", rf"\1\n{urlpatterns_str}\n\3", content)
-                content = content.replace("from django.urls import path", "from django.urls import path, include, re_path\nfrom django_nextjs.views import nextjs_page\n")
-                urls.seek(0)
-                urls.write(content)
-                urls.truncate()
+        # if self.create_next_js:
+        #     self.urlpatterns.append("path('', include('django_nextjs.urls'))")
+        #     self.urlpatterns.append("re_path(r'^.*', nextjs_page(), name='frontpage')")
+        #     with open(self.URLS_PATH, "r+") as urls:
+        #         content = urls.read()
+        #         urlpatterns_str = "\n".join(f"    {u}," for u in self.urlpatterns)
+        #         content = re.sub(r"(urlpatterns = \[)([\s\S]*?)(\])", rf"\1\n{urlpatterns_str}\n\3", content)
+        #         content = content.replace("from django.urls import path", "from django.urls import path, include, re_path\nfrom django_nextjs.views import nextjs_page\n")
+        #         urls.seek(0)
+        #         urls.write(content)
+        #         urls.truncate()
+        pass
 
     def update_project_files(self):
         self.__update_settings_file()
@@ -144,11 +198,12 @@ class DjangoProjectManager:
         with open(self.SETTINGS_PATH, "r+") as settings:
             content = settings.read()
             secret_key = str(uuid.uuid4())
-            set_key(os.path.join(self.DJANGO_PROJECT_DIR, ".env"), "SECRET_KEY", secret_key)
+            set_key(os.path.join(self.DJANGO_DIR, ".env"), "SECRET_KEY", secret_key)
+            set_key(os.path.join(self.DJANGO_DIR, ".env"), "SECRET_KEY", secret_key)
+
             content = content.replace("from pathlib import Path", "from pathlib import Path\nfrom decouple import config\nimport os\n")
             content = re.sub(r"^SECRET_KEY = .*", r'SECRET_KEY = config("SECRET_KEY")', content)
-            if self.include_rest:
-                self.installed_apps.append("rest_framework")
+            if self.include_rest_auth:
                 self.installed_apps.append("rest_framework.authtoken")
 
             if self.include_cors:
@@ -158,8 +213,8 @@ class DjangoProjectManager:
                 content = re.sub(r"(MIDDLEWARE = \[)([\s\S]*?)(\])", rf"\1\n{middleware_str}\n\3", content)
                 content += "\nCORS_ALLOW_ALL_ORIGINS = True\n"  # adding at end
 
-            if self.include_next_js:
-                self.installed_apps.append("django_nextjs.apps.DjangoNextJSConfig")
+            # if self.create_next_js:
+            #     self.installed_apps.append("django_nextjs.apps.DjangoNextJSConfig")
 
             if self.include_custom_user:
                 self.installed_apps.append("users")
@@ -173,9 +228,9 @@ class DjangoProjectManager:
 
             static = """STATIC_URL = "static/"
 MEDIA_URL = "media/"
-# STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
-STATIC_ROOT = os.path.join(BASE_DIR, "public", "static")
-MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")\n"""
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
             content = content.replace("STATIC_URL = 'static/'", static)
             content = content.replace("LANGUAGE_CODE = 'en-us'", "LANGUAGE_CODE = 'pl-PL'")
             content = content.replace("TIME_ZONE = 'UTC'", "TIME_ZONE = 'Europe/Warsaw'")
@@ -187,47 +242,178 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")\n"""
 
         click.echo(click.style(">> [RESULT] Project settings file updated successfully", fg="green"), color=True)
 
-    def select_and_install_libraries(self):
-        self.include_ninja = click.confirm(click.style("Include DjangoNinja? https://django-ninja.dev", fg="cyan"), default=True)
-        if self.include_ninja:
-            self.to_install.append("django-ninja")
+    def select_and_install_python_packages(self):
+        packages = [
+            Choice("django-ninja", name="Django Ninja", enabled=True),
+            Choice("djangorestframework", name="Rest Auth", enabled=True),
+            Choice("django-cors-headers", name="Cors Headers", enabled=True),
+            Choice("users", name="Custom User Model", enabled=True),
+            Choice("psycopg2", name="PostgreSQL", enabled=False),
+        ]
+        self.to_install.extend(
+            inquirer.checkbox(
+                message="Select packages to install:",
+                choices=packages,
+                cycle=False,
+            ).execute(),
+        )
 
-        self.include_rest = click.confirm(click.style("Include Rest Framework?", fg="cyan"), default=True)
-        if self.include_rest:
-            self.to_install.append("djangorestframework")
-
-        self.include_cors = click.confirm(click.style("Include Cors Headers?", fg="cyan"), default=True)
-        if self.include_cors:
-            self.to_install.append("django-cors-headers")
-
-        self.include_postgres_sql = click.confirm(click.style("Include PostgreSQL?", fg="cyan"), default=False)
-        if self.include_postgres_sql:
-            self.to_install.append("psycopg2")
-
-        self.include_next_js = click.confirm(click.style("Include Next.js? https://pypi.org/project/django-nextjs/", fg="cyan"), default=True)
-        if self.include_next_js:
-            self.to_install.append("django-nextjs")
-            self.nextjs_project_name = click.prompt(click.style("Enter Next.js project name", fg="cyan"), default="frontend")
-
-        self.include_custom_user = click.confirm(click.style("Include Custom User Model?", fg="cyan"), default=True)
+        self.include_ninja = "django-ninja" in self.to_install
+        self.include_rest_auth = "djangorestframework" in self.to_install
+        self.include_cors = "django-cors-headers" in self.to_install
+        self.include_postgres_sql = "psycopg2" in self.to_install
+        self.include_custom_user = "users" in self.to_install
         self.__install_libraries()
 
     def start_nextjs_project(self):
         os.system(f"cd '{self.BASE_DIR}' && npx create-next-app@latest {self.nextjs_project_name}")
+        self.NEXTJS_DIR = os.path.join(self.PROJECT_DIR, self.nextjs_project_name)
+        self.__start_django_app(self.nextjs_project_name)
 
     def make_migrations_and_migrate(self):
-        return os.system(f"cd '{self.DJANGO_PROJECT_DIR}' && '{self.VENV_DIR}/bin/python' manage.py makemigrations && '{self.VENV_DIR}/bin/python' manage.py migrate")
+        return os.system(f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py makemigrations && '{self.VENV_DIR}/bin/python' manage.py migrate")
 
-    def create_project(self, project_name):
-        self.set_project_name(project_name)
+    def createsuperuser(self):
+        click.echo(">> [INFO] Creating admin")
+        if not self.include_custom_user:
+            login = click.prompt(click.style("Enter username", fg="cyan"), default="admin")
+            email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@admin.com")
+            password = click.prompt(click.style("Enter password", fg="cyan"), default="!@#qwerty", hide_input=True)
+            os.system(
+                f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py makemigrations && '{self.VENV_DIR}/bin/python' manage.py from django.contrib.auth.models import User; User.objects.create_superuser('{login}','{email}', '{password}')",  # noqa: E501
+            )
+        else:
+            email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@admin.com")
+            password = click.prompt(click.style("Enter password", fg="cyan"), default="!@#qwerty", hide_input=True)
+            os.system(
+                f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py makemigrations && '{self.VENV_DIR}/bin/python' manage.py from django.contrib.auth.models import User; User.objects.create_superuser('{email}', '{password}')",  # noqa: E501
+            )
+        click.echo(click.style(">> [RESULT] Admin created successfully", fg="green"), color=True)
+
+    def select_deploy_option(self):
+        click.echo(click.style("Chose deploy option", fg="cyan"))
+        # self.deploy_option = beaupy.select(["mydevil", "docker", "standalone"], cursor="X", cursor_style="cyan")
+        options = ["mydevil", "docker", "standalone"]
+        self.deploy_option = inquirer.select(
+            message="Select an action:",
+            choices=options,
+            default="mydevil",
+        ).execute()
+
+    def __build_for_my_devil(self):
+        click.echo(">> [INFO] Renaming Django project to public_python")
+        public_python_path = os.path.join(self.PROJECT_DIR, "public_python")
+        os.rename(self.DJANGO_DIR, public_python_path)
+        self.DJANGO_DIR = public_python_path
+        self.SETTINGS_PATH = os.path.join(self.DJANGO_DIR, "config", "settings.py")
+        with open(self.SETTINGS_PATH, "r+") as settings:
+            content = settings.read()
+            content = re.sub(r"(STATIC_ROOT = )(.*)", r'\1os.path.join(BASE_DIR, "public", "static")', content)
+            content = re.sub(r"(MEDIA_ROOT = )(.*)", r'\1os.path.join(BASE_DIR, "public", "static")', content)
+
+        if self.create_next_js:
+            click.echo(">> [INFO] Renaming Next.js project to public_node")
+            public_node_path = os.path.join(self.PROJECT_DIR, "public_python")
+            os.rename(self.NEXTJS_DIR, public_node_path)
+            self.NEXTJS_DIR = public_node_path
+            shutil.copyfile(os.path.join(self.ASSETS_DIR, ".nextjs", "app.js"), os.path.join(self.NEXTJS_DIR, "app.js"))
+
+        click.echo(">> [INFO] Preparing passenger_wsgi.py file")
+        content = """import os
+    import sys
+    from urllib.parse import unquote
+
+    from django.core.wsgi import get_wsgi_application
+
+    sys.path.append(os.getcwd())
+    os.environ['DJANGO_SETTINGS_MODULE'] = "config.settings"
+
+
+    def application(environ, start_response):
+        _application = get_wsgi_application()
+        return _application(environ, start_response)"""
+
+        with open(os.path.join(self.DJANGO_DIR, "passenger_wsgi.py"), "w+") as passenger:
+            passenger.write(content)
+
+    def __build_for_docker(self):
+        django_dockerfile_path = os.path.join(self.ASSETS_DIR, "Dockerfile.django_only")
+        treafik_dockerfile_path = os.path.join(self.ASSETS_DIR, "Dockerfile.treafik")
+        nextjs_dockerfile_path = os.path.join(self.ASSETS_DIR, "Dockerfile.nextjs")
+
+        dockecompose_path = os.path.join(self.ASSETS_DIR, "docker-compose_django_only.yaml")
+
+        app_dir = os.path.join(self.BASE_DIR, "apps")
+
+        treafik_path = os.path.join(app_dir, "treafik")
+        django_path = os.path.join(app_dir, "www")
+        nextjs_path = os.path.join(app_dir, "www")
+
+        os.mkdir(app_dir)
+        os.mkdir(treafik_path)
+
+        if self.create_next_js:
+            shutil.move(self.NEXTJS_DIR, nextjs_path)
+            self.NEXTJS_DIR = nextjs_path
+            django_path = os.path.join(app_dir, "django")
+            django_dockerfile_path = os.path.join(self.ASSETS_DIR, "Dockerfile.django_nextjs")
+            shutil.copyfile(nextjs_dockerfile_path, os.path.join(self.NEXTJS_DIR, "Dockerfile"))
+            dockecompose_path = os.path.join(self.ASSETS_DIR, "docker-compose_django_nextjs.yaml")
+
+        shutil.move(self.DJANGO_DIR, django_path)
+        self.DJANGO_DIR = django_path
+        shutil.copyfile(django_dockerfile_path, os.path.join(self.DJANGO_DIR, "Dockerfile"))
+        shutil.copyfile(treafik_dockerfile_path, os.path.join(treafik_path, "Dockerfile"))
+
+        shutil.copyfile(dockecompose_path, os.path.join(app_dir, "docker-compose.yaml"))
+
+    def create_project(self):
+        self.set_project_name()
         self.create_venv()
-        self.select_and_install_libraries()
+        self.select_deploy_option()
+        self.select_and_install_python_packages()
         self.start_django_project()
         self.update_project_files()
         self.make_migrations_and_migrate()
+        self.createsuperuser()
 
-        if self.include_next_js:
+        self.create_next_js = click.confirm(click.style("Create Next.js project?", fg="cyan"), default=True)
+        if self.create_next_js:
+            self.nextjs_project_name = click.prompt(click.style("Enter Next.js project name", fg="cyan"), default="frontend")
             self.start_nextjs_project()
+
+        match self.deploy_option:
+            # static files larger than 4kb to uploadthing!!!!!
+            case "mydevil":
+                click.echo(">> [INFO] Prepating project for MyDevil")
+                # sourcefiles public/static/
+                self.__build_for_my_devil()
+            case "docker":
+                click.echo(">> [INFO] Prepating project for Docker")
+                self.__build_for_docker()
+                # sourcefiles static/
+
+                # $PROJECT_ROOT
+                # ├── apps/treafik  # Load Balancer
+                # ├── apps/postgres ??
+
+                # if next_js
+                # ├── apps/django  # Django Backend
+                # ├── apps/django/requirements # Python Requirements
+                # ├── apps/django/manage.py # Run Django Commands
+                # ├── apps/django/package.json # npm commands.
+                # ├── apps/www  # Django
+
+                # if not next_js
+                # ├── apps/www  # Django
+                # ├── apps/www/requirements # Python Requirements
+                # ├── apps/www/manage.py # Run Django Commands
+
+            case _:
+                pass
+
+        # if self.create_next_js:
+        #     self.add_run_dev()
 
         click.echo(click.style(">> [RESULT] Succes!", fg="green"), color=True)
         sys.exit(0)
@@ -238,11 +424,11 @@ def main() -> None:
     pass
 
 
-@click.command("start-project")
-@click.option("--name", default="backend", help="Create new django project")
-def start_project(name):
+@click.command("start-project", help="Create new django project")
+@click.option("--template", help="Feature not available")
+def start_project(template):
     manager = DjangoProjectManager()
-    manager.create_project(name)
+    manager.create_project()
 
 
 @click.command("docker-build")

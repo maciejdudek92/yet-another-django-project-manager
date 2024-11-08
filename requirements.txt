@@ -1,4 +1,6 @@
 python-on-whales
 pyinstaller
 click
+InquirerPy
 python-dotenv
+python-decouple

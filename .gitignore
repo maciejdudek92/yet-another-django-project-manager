@@ -1,4 +1,5 @@
 release/
 build/
 venv/
-.django_users/
+assets/
+temp_assets/
