@@ -4,5 +4,5 @@ macOS only
 
 ## usage
 
-- start-project --name <default=backend> | create new Django project
+- start-project | create new Django project
 - docker-build | not ready yet
