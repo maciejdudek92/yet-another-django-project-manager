@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 from dotenv import set_key
-from InquirerPy import inquirer
+from InquirerPy import get_style, inquirer
 from InquirerPy.base.control import Choice
 
 
@@ -67,6 +67,8 @@ class DjangoProjectManager:
     ]
 
     def __init__(self):
+        self._question_style = get_style({"question": "#7df7fa", "questionmark": "#7df7fa"}, style_override=True)
+
         # self.console = Console()
         self.BASE_DIR = Path(sys.argv[0]).resolve().parent
         self.TEMP_DIR = self.BASE_DIR
@@ -74,6 +76,19 @@ class DjangoProjectManager:
             self.TEMP_DIR = sys._MEIPASS  # noqa: SLF001
         self.ASSETS_ZIP = os.path.join(self.TEMP_DIR, "assets.zip")
         self.__prepare_assets()
+
+    def __check_project_dir(self):
+        if os.path.exists(self.PROJECT_DIR):
+            if self.PROJECT_NAME == "." and len(os.listdir(self.PROJECT_DIR)) > 0:
+                click.echo(click.style(f">> [ERROR] Folder '{self.PROJECT_DIR}' is not empty", fg="red"))
+                sys.exit(1)
+
+            if click.confirm(click.style(f">> [WARNING] Found folder '{self.PROJECT_NAME}' in directory, delete?", fg="yellow"), default=True):
+                shutil.rmtree(self.PROJECT_DIR)
+            else:
+                click.echo(click.style("Aborted!", fg="red"), default=True)
+                sys.exit(1)
+        click.echo(f">> [INFO] Project directory -> {self.PROJECT_DIR}")
 
     def set_project_name(self):
         self.PROJECT_NAME = click.prompt(click.style("Enter project name", fg="cyan"), default=".")
@@ -84,17 +99,6 @@ class DjangoProjectManager:
 
         self.__check_project_dir()
         os.mkdir(self.PROJECT_DIR)
-
-        self.DJANGO_DIR = os.path.join(self.PROJECT_DIR, "django")
-        self.VENV_DIR = os.path.join(self.DJANGO_DIR, "venv")
-        self.SETTINGS_PATH = os.path.join(self.DJANGO_DIR, "config", "settings.py")
-        self.URLS_PATH = os.path.join(self.DJANGO_DIR, "config", "urls.py")
-
-    def __check_project_dir(self):
-        if os.path.exists(self.PROJECT_DIR):
-            click.echo(click.style(">> [WARNING] Found Django project in directory, deleting...", fg="yellow"), color=True)
-            shutil.rmtree(self.PROJECT_DIR)
-        click.echo(f">> [INFO] Project directory -> {self.PROJECT_DIR}")
 
     def __pip_install(self, libs: str):
         pip = f"{self.VENV_DIR}/bin/pip"
@@ -124,12 +128,14 @@ class DjangoProjectManager:
 
         click.echo(click.style(">> [RESULT] Django project successfully created", fg="green"), color=True)
 
-    def __start_django_app(self, name: str):
-        click.echo(f">> [INFO] Creating new Django app -> {name}")
-        if self.__django_admin(args=f"startapp {name}") != 0:
-            click.echo(click.style(">> [ERROR] Django app cannot be created", fg="red"), color=True, err=True)
-            sys.exit(1)
-        click.echo(click.style(">> [RESULT] Django app successfully created", fg="green"), color=True)
+    def start_django_app(self):
+        if click.confirm(click.style("Would you like to start django app?", fg="cyan"), default=True):
+            name = click.prompt(click.style("Enter app name", fg="cyan"))
+            click.echo(f">> [INFO] Creating new django app -> {name}")
+            if self.__django_admin(args=f"startapp {name}") != 0:
+                click.echo(click.style(">> [ERROR] Django app cannot be created", fg="red"), color=True, err=True)
+                sys.exit(1)
+            click.echo(click.style(">> [RESULT] Django app successfully created", fg="green"), color=True)
 
     def create_venv(self):
         click.echo(">> [INFO] Creating virtual environment")
@@ -199,10 +205,9 @@ class DjangoProjectManager:
             content = settings.read()
             secret_key = str(uuid.uuid4())
             set_key(os.path.join(self.DJANGO_DIR, ".env"), "SECRET_KEY", secret_key)
-            set_key(os.path.join(self.DJANGO_DIR, ".env"), "SECRET_KEY", secret_key)
 
             content = content.replace("from pathlib import Path", "from pathlib import Path\nfrom decouple import config\nimport os\n")
-            content = re.sub(r"^SECRET_KEY = .*", r'SECRET_KEY = config("SECRET_KEY")', content)
+            content = re.sub(r"(SECRET_KEY = )(.*)", r"\1config('SECRET_KEY')", content)
             if self.include_rest_auth:
                 self.installed_apps.append("rest_framework.authtoken")
 
@@ -212,9 +217,6 @@ class DjangoProjectManager:
                 middleware_str = "\n".join(f'    "{m}",' for m in self.middleware)
                 content = re.sub(r"(MIDDLEWARE = \[)([\s\S]*?)(\])", rf"\1\n{middleware_str}\n\3", content)
                 content += "\nCORS_ALLOW_ALL_ORIGINS = True\n"  # adding at end
-
-            # if self.create_next_js:
-            #     self.installed_apps.append("django_nextjs.apps.DjangoNextJSConfig")
 
             if self.include_custom_user:
                 self.installed_apps.append("users")
@@ -235,19 +237,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
             content = content.replace("LANGUAGE_CODE = 'en-us'", "LANGUAGE_CODE = 'pl-PL'")
             content = content.replace("TIME_ZONE = 'UTC'", "TIME_ZONE = 'Europe/Warsaw'")
             content = content.replace("ALLOWED_HOSTS = []", "ALLOWED_HOSTS = ['*']")
-            # content += '\nsubprocess.Popen("npm run dev", shell=True, cwd=f"{BASE_DIR}/frontend/")\n'
             settings.seek(0)
             settings.write(content)
             settings.truncate()
 
-        click.echo(click.style(">> [RESULT] Project settings file updated successfully", fg="green"), color=True)
+        click.echo(click.style(">> [RESULT] Django settings file updated", fg="green"), color=True)
 
     def select_and_install_python_packages(self):
         packages = [
             Choice("django-ninja", name="Django Ninja", enabled=True),
             Choice("djangorestframework", name="Rest Auth", enabled=True),
             Choice("django-cors-headers", name="Cors Headers", enabled=True),
-            Choice("users", name="Custom User Model", enabled=True),
+            Choice("users", name="Custom User Model", enabled=False),
             Choice("psycopg2", name="PostgreSQL", enabled=False),
         ]
         self.to_install.extend(
@@ -266,45 +267,69 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
         self.__install_libraries()
 
     def start_nextjs_project(self):
-        os.system(f"cd '{self.BASE_DIR}' && npx create-next-app@latest {self.nextjs_project_name}")
-        self.NEXTJS_DIR = os.path.join(self.PROJECT_DIR, self.nextjs_project_name)
-        self.__start_django_app(self.nextjs_project_name)
+        if os.system(f"cd '{self.PROJECT_DIR}' && npx create-next-app@latest {self.nextjs_project_name}") == 0:
+            self.NEXTJS_DIR = os.path.join(self.PROJECT_DIR, self.nextjs_project_name)
+        else:
+            click.echo(click.style(">> [ERROR] NextJS project cannot be created", fg="red"), color=True, err=True)
+            sys.exit(1)
 
     def make_migrations_and_migrate(self):
         return os.system(f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py makemigrations && '{self.VENV_DIR}/bin/python' manage.py migrate")
 
     def createsuperuser(self):
         click.echo(">> [INFO] Creating admin")
-        if not self.include_custom_user:
-            login = click.prompt(click.style("Enter username", fg="cyan"), default="admin")
-            email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@admin.com")
+        print(self.include_custom_user)
+
+        if self.include_custom_user:
+            email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@example.com")
             password = click.prompt(click.style("Enter password", fg="cyan"), default="!@#qwerty", hide_input=True)
-            os.system(
-                f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py makemigrations && '{self.VENV_DIR}/bin/python' manage.py from django.contrib.auth.models import User; User.objects.create_superuser('{login}','{email}', '{password}')",  # noqa: E501
-            )
+            createsuper_user = f'from django.contrib.auth import get_user_model;User = get_user_model();User.objects.create_superuser("{email}","{password}");'
+            if (
+                os.system(
+                    f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py shell -c '{createsuper_user}'",  # noqa: E501
+                )
+                == 0
+            ):
+                click.echo(click.style(">> [RESULT] Admin created successfully", fg="green"), color=True)
+            else:
+                click.echo(click.style(">> [ERROR] Admin user cannot be created", fg="red"), color=True, err=True)
+                sys.exit(1)
         else:
-            email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@admin.com")
+            login = click.prompt(click.style("Enter username", fg="cyan"), default="admin")
+            email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@example.com")
             password = click.prompt(click.style("Enter password", fg="cyan"), default="!@#qwerty", hide_input=True)
-            os.system(
-                f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py makemigrations && '{self.VENV_DIR}/bin/python' manage.py from django.contrib.auth.models import User; User.objects.create_superuser('{email}', '{password}')",  # noqa: E501
-            )
-        click.echo(click.style(">> [RESULT] Admin created successfully", fg="green"), color=True)
+            createsuper_user = f'from django.contrib.auth.models import User; User.objects.create_superuser("{login}","{email}","{password}");'
+
+            print(createsuper_user)
+            if (
+                os.system(
+                    f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py shell -c '{createsuper_user}'",  # noqa: E501
+                )
+                == 0
+            ):
+                click.echo(click.style(">> [RESULT] Admin created successfully", fg="green"), color=True)
+            else:
+                click.echo(click.style(">> [ERROR] Admin user cannot be created", fg="red"), color=True, err=True)
+                sys.exit(1)
+
+    def prepare_folder_structure(self):
+        self.DJANGO_DIR = os.path.join(self.PROJECT_DIR, "django")
+        if self.deploy_option == "mydevil":
+            self.DJANGO_DIR = os.path.join(self.PROJECT_DIR, "public_python")
+
+        self.VENV_DIR = os.path.join(self.DJANGO_DIR, "venv")
+        self.SETTINGS_PATH = os.path.join(self.DJANGO_DIR, "config", "settings.py")
+        self.URLS_PATH = os.path.join(self.DJANGO_DIR, "config", "urls.py")
 
     def select_deploy_option(self):
-        click.echo(click.style("Chose deploy option", fg="cyan"))
-        # self.deploy_option = beaupy.select(["mydevil", "docker", "standalone"], cursor="X", cursor_style="cyan")
         options = ["mydevil", "docker", "standalone"]
-        self.deploy_option = inquirer.select(
-            message="Select an action:",
-            choices=options,
-            default="mydevil",
-        ).execute()
+        self.deploy_option = inquirer.select(message="Choose deploy option:", choices=options, default="mydevil", style=self._question_style).execute()
 
     def __build_for_my_devil(self):
-        click.echo(">> [INFO] Renaming Django project to public_python")
-        public_python_path = os.path.join(self.PROJECT_DIR, "public_python")
-        os.rename(self.DJANGO_DIR, public_python_path)
-        self.DJANGO_DIR = public_python_path
+        # click.echo(">> [INFO] Renaming Django project to public_python")
+        # public_python_path = os.path.join(self.PROJECT_DIR, "public_python")
+        # os.rename(self.DJANGO_DIR, public_python_path)
+        # self.DJANGO_DIR = public_python_path
         self.SETTINGS_PATH = os.path.join(self.DJANGO_DIR, "config", "settings.py")
         with open(self.SETTINGS_PATH, "r+") as settings:
             content = settings.read()
@@ -312,10 +337,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
             content = re.sub(r"(MEDIA_ROOT = )(.*)", r'\1os.path.join(BASE_DIR, "public", "static")', content)
 
         if self.create_next_js:
-            click.echo(">> [INFO] Renaming Next.js project to public_node")
-            public_node_path = os.path.join(self.PROJECT_DIR, "public_python")
-            os.rename(self.NEXTJS_DIR, public_node_path)
-            self.NEXTJS_DIR = public_node_path
+            # click.echo(">> [INFO] Renaming Next.js project to public_node")
+            # public_node_path = os.path.join(self.PROJECT_DIR, "public_node")
+            # os.rename(self.NEXTJS_DIR, public_node_path)
+            # self.NEXTJS_DIR = public_node_path
             shutil.copyfile(os.path.join(self.ASSETS_DIR, ".nextjs", "app.js"), os.path.join(self.NEXTJS_DIR, "app.js"))
 
         click.echo(">> [INFO] Preparing passenger_wsgi.py file")
@@ -369,17 +394,23 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
 
     def create_project(self):
         self.set_project_name()
-        self.create_venv()
         self.select_deploy_option()
+        self.prepare_folder_structure()
+
+        self.create_venv()
         self.select_and_install_python_packages()
         self.start_django_project()
+        # self.start_django_app()
         self.update_project_files()
         self.make_migrations_and_migrate()
         self.createsuperuser()
 
         self.create_next_js = click.confirm(click.style("Create Next.js project?", fg="cyan"), default=True)
         if self.create_next_js:
-            self.nextjs_project_name = click.prompt(click.style("Enter Next.js project name", fg="cyan"), default="frontend")
+            if self.deploy_option == "mydevil":
+                self.nextjs_project_name = "public_node"
+            else:
+                self.nextjs_project_name = click.prompt(click.style("Enter Next.js project name", fg="cyan"), default="frontend")
             self.start_nextjs_project()
 
         match self.deploy_option:
