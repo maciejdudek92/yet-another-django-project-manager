@@ -116,6 +116,7 @@ class DjangoProjectManager:
         if self.__pip_install(install_string) != 0:
             click.echo(click.style(">> [ERROR] Libraries cannot be installed", fg="red"), color=True, err=True)
             sys.exit(1)
+
         click.echo(click.style(">> [RESULT] Libraries installed successfully", fg="green"), color=True)
 
     def start_django_project(self):
@@ -154,8 +155,6 @@ class DjangoProjectManager:
 
     def __add_custom_user(self):
         users_module_path = os.path.join(self.ASSETS_DIR, ".django_users")
-        print(users_module_path)
-        print(os.path.join(self.DJANGO_DIR, "users"))
         shutil.copytree(users_module_path, os.path.join(self.DJANGO_DIR, "users"))
 
     def add_run_dev(self):
@@ -278,7 +277,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
 
     def createsuperuser(self):
         click.echo(">> [INFO] Creating admin")
-        print(self.include_custom_user)
 
         if self.include_custom_user:
             email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@example.com")
@@ -299,8 +297,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
             email = click.prompt(click.style("Enter email", fg="cyan"), default="admin@example.com")
             password = click.prompt(click.style("Enter password", fg="cyan"), default="!@#qwerty", hide_input=True)
             createsuper_user = f'from django.contrib.auth.models import User; User.objects.create_superuser("{login}","{email}","{password}");'
-
-            print(createsuper_user)
             if (
                 os.system(
                     f"cd '{self.DJANGO_DIR}' && '{self.VENV_DIR}/bin/python' manage.py shell -c '{createsuper_user}'",  # noqa: E501
@@ -336,12 +332,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
             content = re.sub(r"(STATIC_ROOT = )(.*)", r'\1os.path.join(BASE_DIR, "public", "static")', content)
             content = re.sub(r"(MEDIA_ROOT = )(.*)", r'\1os.path.join(BASE_DIR, "public", "static")', content)
 
+
         if self.create_next_js:
-            # click.echo(">> [INFO] Renaming Next.js project to public_node")
-            # public_node_path = os.path.join(self.PROJECT_DIR, "public_node")
-            # os.rename(self.NEXTJS_DIR, public_node_path)
-            # self.NEXTJS_DIR = public_node_path
+            click.echo(">> [INFO] Creating app.js in public_nodejs")
             shutil.copyfile(os.path.join(self.ASSETS_DIR, ".nextjs", "app.js"), os.path.join(self.NEXTJS_DIR, "app.js"))
+            # edit npm build in package.json
+            with open(os.path.join(self.NEXTJS_DIR, "package.json"), "r+") as package_json:
+                content = package_json.read()
+                content = content.replace("next build", "npm install --cpu=wasm32 sharp && next build")
+                package_json.seek(0)
+                package_json.write(content)
+                package_json.truncate()
 
         click.echo(">> [INFO] Preparing passenger_wsgi.py file")
         content = """import os
@@ -396,7 +397,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
         self.set_project_name()
         self.select_deploy_option()
         self.prepare_folder_structure()
-
         self.create_venv()
         self.select_and_install_python_packages()
         self.start_django_project()
@@ -408,7 +408,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
         self.create_next_js = click.confirm(click.style("Create Next.js project?", fg="cyan"), default=True)
         if self.create_next_js:
             if self.deploy_option == "mydevil":
-                self.nextjs_project_name = "public_node"
+                self.nextjs_project_name = "public_nodejs"
             else:
                 self.nextjs_project_name = click.prompt(click.style("Enter Next.js project name", fg="cyan"), default="frontend")
             self.start_nextjs_project()
@@ -443,8 +443,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")\n"""
             case _:
                 pass
 
-        # if self.create_next_js:
-        #     self.add_run_dev()
+        # creating requirements
+        with open(os.path.join(self.DJANGO_DIR, "requirements.txt"), "w+") as requirements_txt:
+            requirements_txt.writelines(self.to_install, "\n")
+
 
         click.echo(click.style(">> [RESULT] Succes!", fg="green"), color=True)
         sys.exit(0)

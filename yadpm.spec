@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Dev Projects/yet-another-django-project-manager/main.py'],
+    ['/Volumes/Macintosh HD/Users/maciejdudek/Desktop/Projects/yet-another-django-project-manager/main.py'],
     pathex=[],
     binaries=[],
     datas=[('assets.zip', '.')],
